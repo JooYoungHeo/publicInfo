@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 let Schema = mongoose.Schema;
 let stationSchema = new Schema({
+  _id: String,
   line: String,
   stationName: String,
-  stationId: String,
   type: String
 });
 
