@@ -1,10 +1,10 @@
 let fs = require('fs');
 let path = require('path');
 let request = require('request');
+let config = require('./config');
 let xml2js = require('xml2js').parseString;
 
-let resourceFile = fs.readFileSync(path.join(process.cwd(), '../resource.json'));
-let publicKey = JSON.parse(resourceFile).public.key;
+let publicKey = config.public.key;
 
 let lineFile = fs.readFileSync('line.txt', 'utf-8');
 let stationList = lineFile.split('\n');
