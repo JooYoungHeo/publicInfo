@@ -14,17 +14,39 @@ stationList.pop();
 
 for (let i in stationList) {
   let stationName = encodeURIComponent(stationList[i]);
-  requestUrl(stationName);
+  requestFindUrl(stationName);
 }
 
-function requestUrl(name) {
+function requestFindUrl(name) {
   let url = `http://openapi.tago.go.kr/openapi/service/SubwayInfoService/getKwrdFndSubwaySttnList?ServiceKey=${publicKey}&subwayStationName=${name}`;
+
   request(url, (err, res, body) => {
     xml2js(body, (err, result) => {
       let items = result.response.body[0].items[0].item;
       for (let i in items) {
-        createDoc('', items[i].subwayStationId[0], items[i].subwayStationName[0]);
+        let line = '';
+        let stationId = items[i].subwayStationId[0];
+        requestScheduleUrl(stationId, 'D').then(result => {
+          if (result !== null) line = result;
+
+          createDoc(line, items[i].subwayStationId[0], items[i].subwayStationName[0]);
+        });
       }
+    });
+  });
+}
+
+function requestScheduleUrl(stationId, typeCode) {
+  let url = `http://openapi.tago.go.kr/openapi/service/SubwayInfoService/getSubwaySttnAcctoSchdulList?ServiceKey=${publicKey}&subwayStationId=${stationId}&dailyTypeCode=01&upDownTypeCode=${typeCode}`;
+  return new Promise((resolve, reject) => {
+    request(url, (err, res, body) => {
+      xml2js(body, (err, result) => {
+        if (result.response.body[0].items[0].item === undefined) resolve(null);
+        else {
+          let item = result.response.body[0].items[0].item[0];
+          resolve(item.subwayRouteId[0]);
+        }
+      });
     });
   });
 }
