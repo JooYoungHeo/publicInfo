@@ -12,16 +12,17 @@ let upDownCodeList = ['D', 'U'];
 let dailyCodeList = ['01', '02', '03'];
 
 findStation(line).then(result => {
-  // result.forEach(item => {
-    let stationId = result[0]._id;
+  result.forEach(item => {
+    let stationId = item._id;
     for (let i in dailyCodeList) {
       let dailyCode = dailyCodeList[i];
       for (let j in upDownCodeList) {
         let upDownCode = upDownCodeList[j];
+
         requestScheduleUrl(stationId, dailyCode, upDownCode);
       }
     }
-  // });
+  });
 });
 
 function findStation(line) {
@@ -49,7 +50,7 @@ function requestScheduleUrl(stationId, dailyCode, upDownCode) {
       if (items === undefined) return;
 
       for (let i = 0 ; i < items.length ; i++) {
-        console.log(`${dailyCode} - ${upDownCode} - ${items[i].arrTime}`);
+        console.log(`${stationId} - ${dailyCode} - ${upDownCode} - ${items[i].arrTime}`);
       }
     });
   });
