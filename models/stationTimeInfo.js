@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 let Schema = mongoose.Schema;
-let subwaySchema = new Schema({
+let stationTimeInfoSchema = new Schema({
   line: String,
   station: String,
   stationId: String,
@@ -12,4 +12,4 @@ let subwaySchema = new Schema({
   type: String
 });
 
-module.exports = mongoose.model('Subway', subwaySchema);
+module.exports = mongoose.model('StationTimeInfo', stationTimeInfoSchema);
