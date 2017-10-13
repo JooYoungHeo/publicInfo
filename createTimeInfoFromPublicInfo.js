@@ -4,7 +4,7 @@ let request = require('request');
 let async = require('async');
 let config = require('./config');
 let xml2js = require('xml2js').parseString;
-let {Station} = require(path.join(process.cwd(), 'models'));
+let {Station, StationTimeInfo} = require(path.join(process.cwd(), 'models'));
 
 let publicKey = config.public.key;
 let url = 'http://openapi.tago.go.kr/openapi/service/SubwayInfoService/getSubwaySttnAcctoSchdulList';
@@ -12,17 +12,21 @@ let line = 'SES08호선';
 let upDownCodeList = ['D', 'U'];
 let dailyCodeList = ['01', '02', '03'];
 
-requestScheduleUrl('SES2814', '01', 'D');
+requestScheduleUrl('SES2814', '몽촌토성', '01', 'U');
 
 // findStation(line).then(result => {
+//
 //   result.forEach(item => {
 //     let stationId = item._id;
+//     let stationName = item.stationName;
+//
 //     for (let i in dailyCodeList) {
 //       let dailyCode = dailyCodeList[i];
+//
 //       for (let j in upDownCodeList) {
 //         let upDownCode = upDownCodeList[j];
 //
-//         requestScheduleUrl(stationId, dailyCode, upDownCode);
+//         requestScheduleUrl(stationId, stationName, dailyCode, upDownCode);
 //       }
 //     }
 //   });
@@ -39,9 +43,10 @@ function findStation(line) {
   });
 }
 
-function requestScheduleUrl(stationId, dailyCode, upDownCode) {
+function requestScheduleUrl(stationId, stationName, dailyCode, upDownCode) {
   let pageNo = 1;
   let flag = true;
+  let timeList = [];
 
   async.whilst(function() {
     return flag;
@@ -64,7 +69,10 @@ function requestScheduleUrl(stationId, dailyCode, upDownCode) {
         }
 
         for (let i = 0 ; i < items.length ; i++) {
-          console.log(`${stationId} - ${dailyCode} - ${upDownCode} - ${items[i].arrTime}`);
+          timeList.push({
+            depTime: items[i].depTime[0],
+            endStationName: items[i].endSubwayStationNm[0]
+          });
         }
 
         pageNo++;
@@ -72,6 +80,25 @@ function requestScheduleUrl(stationId, dailyCode, upDownCode) {
       });
     });
   }, function(err) {
-    console.log('done');
+    if (err) console.error(err);
+    createDoc(stationName, stationId, timeList, dailyCode, upDownCode);
+  });
+}
+
+function createDoc(stationName, stationId, timeTable, dailyType, upDownType) {
+  let item = new StationTimeInfo();
+
+  item.line = line;
+  item.stationName = stationName;
+  item.stationId = stationId;
+  item.timeTable = timeTable;
+  item.dailyType = dailyType;
+  item.upDownType = upDownType;
+  item.abbreviation = '';
+  item.type = 'Subway';
+
+  item.save(err => {
+    if (err) console.error(err);
+    else console.log(`${stationName} - create done`);
   });
 }
