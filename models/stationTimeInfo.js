@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 let Schema = mongoose.Schema;
 let stationTimeInfoSchema = new Schema({
   line: String,
-  station: String,
+  stationName: String,
   stationId: String,
   timeTable: Schema.Types.Mixed,
   abbreviation: String,
