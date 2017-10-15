@@ -12,25 +12,25 @@ let line = 'SES08호선';
 let upDownCodeList = ['D', 'U'];
 let dailyCodeList = ['01', '02', '03'];
 
-requestScheduleUrl('SES2814', '몽촌토성', '01', 'U');
+// requestScheduleUrl('SES2814', '몽촌토성', '01', 'U');
 
-// findStation(line).then(result => {
-//
-//   result.forEach(item => {
-//     let stationId = item._id;
-//     let stationName = item.stationName;
-//
-//     for (let i in dailyCodeList) {
-//       let dailyCode = dailyCodeList[i];
-//
-//       for (let j in upDownCodeList) {
-//         let upDownCode = upDownCodeList[j];
-//
-//         requestScheduleUrl(stationId, stationName, dailyCode, upDownCode);
-//       }
-//     }
-//   });
-// });
+findStation(line).then(result => {
+
+  result.forEach(item => {
+    let stationId = item._id;
+    let stationName = item.stationName;
+
+    for (let i in dailyCodeList) {
+      let dailyCode = dailyCodeList[i];
+
+      for (let j in upDownCodeList) {
+        let upDownCode = upDownCodeList[j];
+
+        requestScheduleUrl(stationId, stationName, dailyCode, upDownCode);
+      }
+    }
+  });
+});
 
 function findStation(line) {
   return new Promise((resolve, reject) => {
@@ -109,6 +109,6 @@ function createDoc(stationName, stationId, timeTable, dailyType, upDownType) {
 
   item.save(err => {
     if (err) console.error(err);
-    else console.log(`${stationName} - create done`);
+    else console.log(`${stationName} - (${dailyType}, ${upDownType}) create done`);
   });
 }
