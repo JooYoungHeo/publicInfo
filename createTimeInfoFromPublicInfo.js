@@ -53,35 +53,45 @@ function requestScheduleUrl(stationId, stationName, dailyCode, upDownCode) {
   }, function(callback) {
     let requestUrl = `${url}?ServiceKey=${publicKey}&subwayStationId=${stationId}&dailyTypeCode=${dailyCode}&upDownTypeCode=${upDownCode}&pageNo=${pageNo}`;
 
-    request(requestUrl, (err, res, body) => {
-      if (err) {;
+    requestPublicInfo(requestUrl).then(result => {
+      return convertXmlToJs(result);
+    }).then(result => {
+      let items = result.response.body[0].items[0].item;
+      if (items === undefined) {
         flag = false;
-        callback();
-        return;
-      }
-
-      xml2js(body, (err, result) => {
-        let items = result.response.body[0].items[0].item;
-        if (items === undefined) {
-          flag = false;
-          callback();
-          return;
-        }
-
+      } else {
         for (let i = 0 ; i < items.length ; i++) {
           timeList.push({
             depTime: items[i].depTime[0],
             endStationName: items[i].endSubwayStationNm[0]
           });
         }
-
         pageNo++;
-        callback();
-      });
+      }
+      callback();
+    }).catch(err => {
+      flag = false;
+      callback();
     });
   }, function(err) {
     if (err) console.error(err);
     createDoc(stationName, stationId, timeList, dailyCode, upDownCode);
+  });
+}
+
+function requestPublicInfo(url) {
+  return new Promise((resolve, reject) => {
+    request(url, (err, res, body) => {
+      err? reject(err): resolve(body);
+    });
+  });
+}
+
+function convertXmlToJs(body) {
+  return new Promise((resolve, reject) => {
+    xml2js(body, (err, result) => {
+      err? reject(err): resolve(result);
+    });
   });
 }
 
