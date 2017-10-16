@@ -4,46 +4,31 @@ let request = require('request');
 let async = require('async');
 let config = require('./config');
 let xml2js = require('xml2js').parseString;
-let {Station, StationTimeInfo} = require(path.join(process.cwd(), 'models'));
+let {StationTimeInfo} = require(path.join(process.cwd(), 'models'));
 
 let publicKey = config.public.key;
 let url = 'http://openapi.tago.go.kr/openapi/service/SubwayInfoService/getSubwaySttnAcctoSchdulList';
-let line = 'SES08호선';
+
+let line = process.argv[2];
 let upDownCodeList = ['D', 'U'];
 let dailyCodeList = ['01', '02', '03'];
+let stationId = process.argv[3];
+let stationName = process.argv[4];
 
-// requestScheduleUrl('SES2814', '몽촌토성', '01', 'U');
+for (let i in dailyCodeList) {
 
-findStation(line).then(result => {
+  let dailyCode = dailyCodeList[i];
 
-  result.forEach(item => {
-    let stationId = item._id;
-    let stationName = item.stationName;
+  for (let j in upDownCodeList) {
 
-    for (let i in dailyCodeList) {
-      let dailyCode = dailyCodeList[i];
+    let upDownCode = upDownCodeList[j];
 
-      for (let j in upDownCodeList) {
-        let upDownCode = upDownCodeList[j];
-
-        requestScheduleUrl(stationId, stationName, dailyCode, upDownCode);
-      }
-    }
-  });
-});
-
-function findStation(line) {
-  return new Promise((resolve, reject) => {
-    Station.find({
-      line: line
-    }).exec((err, item) => {
-      if(err) reject(err);
-      else resolve(item);
-    });
-  });
+    requestScheduleUrl(stationId, stationName, dailyCode, upDownCode);
+  }
 }
 
 function requestScheduleUrl(stationId, stationName, dailyCode, upDownCode) {
+  let requestCount = 0;
   let pageNo = 1;
   let flag = true;
   let timeList = [];
@@ -53,10 +38,13 @@ function requestScheduleUrl(stationId, stationName, dailyCode, upDownCode) {
   }, function(callback) {
     let requestUrl = `${url}?ServiceKey=${publicKey}&subwayStationId=${stationId}&dailyTypeCode=${dailyCode}&upDownTypeCode=${upDownCode}&pageNo=${pageNo}`;
 
-    requestPublicInfo(requestUrl).then(result => {
-      return convertXmlToJs(result);
-    }).then(result => {
+    requestPublicInfo(requestUrl)
+    .then(result => convertXmlToJs(result))
+    .then(result => {
+      requestCount++;
+
       let items = result.response.body[0].items[0].item;
+
       if (items === undefined) {
         flag = false;
       } else {
@@ -75,7 +63,7 @@ function requestScheduleUrl(stationId, stationName, dailyCode, upDownCode) {
     });
   }, function(err) {
     if (err) console.error(err);
-    createDoc(stationName, stationId, timeList, dailyCode, upDownCode);
+    createDoc(stationName, stationId, timeList, dailyCode, upDownCode, requestCount);
   });
 }
 
@@ -95,7 +83,7 @@ function convertXmlToJs(body) {
   });
 }
 
-function createDoc(stationName, stationId, timeTable, dailyType, upDownType) {
+function createDoc(stationName, stationId, timeTable, dailyType, upDownType, requestCount) {
   let item = new StationTimeInfo();
 
   item.line = line;
@@ -109,6 +97,9 @@ function createDoc(stationName, stationId, timeTable, dailyType, upDownType) {
 
   item.save(err => {
     if (err) console.error(err);
-    else console.log(`${stationName} - (${dailyType}, ${upDownType}) create done`);
+    else {
+      console.log(`url request count: ${requestCount}`);
+      console.log(`${stationName} - (${dailyType}, ${upDownType}) create done`);
+    }
   });
 }
