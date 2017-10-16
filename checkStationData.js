@@ -1,7 +1,9 @@
 let path = require('path');
-let {Station, StationTimeInfo} = require(path.join(process.cwd(), 'models'));
+let {Station} = require(path.join(process.cwd(), 'models'));
 
-findStation().then(result => {
+let line = process.argv[2];
+
+findStation(line).then(result => {
   result.forEach(item => {
     console.log(JSON.stringify(item));
   });
@@ -9,9 +11,9 @@ findStation().then(result => {
   console.error(err);
 });
 
-function findStation() {
+function findStation(line) {
   return new Promise((resolve, reject) => {
-    Station.find({},{stationName: 1}).exec((err, item) => {
+    Station.find({line: line},{stationName: 1}).exec((err, item) => {
       err? reject(err): resolve(item);
     });
   });
